@@ -1,41 +1,56 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+const express = require('express');
+const mongoose = require('mongoose');
+const authRoutes = require('./routes/authRoutes');
+const authenticate = require('./middleware/authenticate');
+const createError = require('http-errors');
+const logger = require('morgan');
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+require("dotenv").config();
 
-var app = express();
+const app = express();
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+// Middleware
+app.use(express.json());
+
+// Connect to MongoDB
+mongoose.connect('mongodb://127.0.0.1:27017/usersdb', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => {
+    console.log('Connected to MongoDB');
+    // Start your server or perform any other operations
+})
+.catch((error) => {
+    console.error('Error connecting to MongoDB:', error);
+});
 
 app.use(logger('dev'));
-app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
+//Routes
+app.use('/auth', authRoutes);
 
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
+// Protected route example
+app.get('/protected', authenticate, (req, res) => {
+    res.json({ message: 'You are authenticated' });
 });
 
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
-});
+// Define the error handler middleware function
+const errorHandler = (err, req, res, next) => {
+    console.error(err); // Log the error for debugging purposes
+  
+    // Set a default error status code
+    const statusCode = err.statusCode || 500;
+  
+    // Set a default error message
+    const message = err.message || 'Internal Server Error';
+  
+    // Send the error response
+    res.status(statusCode).json({ error: message });
+};
+  
+// Register the error handler middleware
+app.use(errorHandler);
 
 module.exports = app;
