@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
 const authenticate = require('./middleware/authenticate');
 const createError = require('http-errors');
 const logger = require('morgan');
@@ -13,7 +14,7 @@ const app = express();
 app.use(express.json());
 
 // Connect to MongoDB
-mongoose.connect('mongodb://127.0.0.1:27017/usersdb', {
+mongoose.connect('mongodb://127.0.0.1:27017/' + process.env.DATABASE_NAME, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
@@ -30,11 +31,8 @@ app.use(express.urlencoded({ extended: false }));
 
 //Routes
 app.use('/auth', authRoutes);
-
 // Protected route example
-app.get('/protected', authenticate, (req, res) => {
-    res.json({ message: 'You are authenticated' });
-});
+app.use('/users', authenticate, userRoutes);
 
 // Define the error handler middleware function
 const errorHandler = (err, req, res, next) => {
