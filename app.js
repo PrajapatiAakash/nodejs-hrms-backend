@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors')
 const mongoose = require('mongoose');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -9,6 +10,9 @@ const logger = require('morgan');
 require("dotenv").config();
 
 const app = express();
+
+//Enabled Cors
+app.use(cors())
 
 // Middleware
 app.use(express.json());
