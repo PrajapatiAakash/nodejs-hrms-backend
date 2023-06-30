@@ -1,10 +1,16 @@
 const jwt = require('jsonwebtoken');
+const tokenManager = require('./../tokenManager');
 
 const authenticate = (req, res, next) => {
   const token = req.headers.authorization;
 
   if (!token) {
     return res.status(401).json({ error: 'Authorization failed' });
+  }
+
+  // Check if the token is blacklisted
+  if (tokenManager.isTokenBlacklisted(token)) {
+    return res.status(401).json({ error: 'Token has been expired.' });
   }
 
   try {
